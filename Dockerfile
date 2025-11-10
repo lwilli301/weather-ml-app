@@ -1,13 +1,13 @@
 FROM python:3.9-slim
 
 # Set the working directory in the container
-WORKDIR /app
+WORKDIR /weather-ml-app
 
 # Install dependencies
-RUN pip install -r requirements.txt
+RUN pip install -r /requirements.txt
 
 # Copy the rest of the application code
-COPY . /app
+COPY . /weather-ml-app
 
 # Expose the port
 EXPOSE 5000
