@@ -21,21 +21,26 @@ class TestUnit(unittest.TestCase):
 			'clouds': '9'
 		}
 		response = self.client.post('/', data=form_data)
+                self.assertNotEqual(response.status_code, 500, msg="App crashed on missing field")
+                self.assertIn(b'error', response.data.lower(), msg="No error message returned for missing field")
 
 	# Complete this function to test that the model can be loaded correctly
 	def test_model_can_be_loaded(self):
 		model = load_model()
+                self.assertIsNotNone(model, msg="Model failed to load")
 		
 
 	# Test model classification is within the 9 classes, each time for a different class with three different inputs
 	def test_clear_classification_output(self):
 		test_input = np.array([269.686,1002,78,0,23,0,0,0,0]).reshape(1,-1)
 		class_result, _ = classify_weather(test_input) 
+                self.assertEqual(class_result, 'clear', msg="Expected 'clear' classification")
 		# Ensure that 'clear' class is returned
 		
 	def test_rainy_classification_output(self):
 		test_input = np.array([279.626,998,99,1,314,0.3,0,0,88]).reshape(1,-1)
 		class_result, _ = classify_weather(test_input) 
+                self.assertEqual(class_result, 'rainy', msg="Expected 'rainy' classification")
 		# Ensure that 'rainy' class is returned
 		
 
@@ -43,6 +48,7 @@ class TestUnit(unittest.TestCase):
 
 		test_input = np.array([289.47,1015,88,2,300,0,0,0,20]).reshape(1,-1)
 		class_result, _ = classify_weather(test_input) 
+                self.assertEqual(class_result, 'foggy', msg="Expected 'foggy' classification")
 
 		# Ensure that 'foggy' class is returned
 		
