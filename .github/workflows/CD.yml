@@ -8,5 +8,16 @@ jobs:
   Step_F:
     runs-on: self-hosted
     steps:
+      - name: Login to Dockerhub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrests.DOCKERHUB_USERNAME }} --password--stdin
       - name: Push Docker image
-        run: docker image push Dockerimage:v1
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/weather-ml-app:v1
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/weather-ml-app:v1
+  Step_G:
+    runs-on: self-hosted
+    steps:
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f k8s/deployment.yml
+          kubectl apply -f k8s/service.yml
