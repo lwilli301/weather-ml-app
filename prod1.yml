@@ -48,17 +48,17 @@
         url: https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
         dest: /usr/local/bin/minikube
         mode: '0755'
-        
-    - name: Start Minikube
-      shell: minikube start --driver=docker
-      become: no
-      when: "'Running' not in minikube_status.stdout"
 
     - name: Check Minikube status
       command: minikube status
       register: minikube_status
       ignore_errors: yes
       become: no
+        
+    - name: Start Minikube
+      shell: minikube start --driver=docker
+      become: no
+      when: "'Running' not in minikube_status.stdout"
 
     - name: Create Registry Secret
       shell: >
