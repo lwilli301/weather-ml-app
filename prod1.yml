@@ -68,6 +68,11 @@
     
     - name: Start Minikube
       shell: minikube start --driver=docker
+      become: yes
+      become_user: ubuntu
+      environment:
+        HOME: "/home/ubuntu"
+        USER: "ubuntu"
       when: >
         (not minikube_profile_exists) or
         ('Running' not in (minikube_status.stdout | default('')))
