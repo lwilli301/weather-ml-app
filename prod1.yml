@@ -49,16 +49,28 @@
         dest: /usr/local/bin/minikube
         mode: '0755'
 
-    - name: Check Minikube status
+    - name: Check if Minikube profile exists
+      command: minikube profile list -o json
+      register: profile_list
+      failed_when: false
+      changed_when: false
+    
+    - name: Determine if Minikube profile exists
+      set_fact:
+        minikube_profile_exists: "{{ 'minikube' in (profile_list.stdout | from_json).valid | map(attribute='Name') | list }}"
+    
+    - name: Check Minikube status (only if profile exists)
       command: minikube status
       register: minikube_status
-      ignore_errors: yes
-      become: no
-        
+      failed_when: false
+      changed_when: false
+      when: minikube_profile_exists
+    
     - name: Start Minikube
       shell: minikube start --driver=docker
-      become: no
-      when: "'Running' not in minikube_status.stdout"
+      when: >
+        (not minikube_profile_exists) or
+        ('Running' not in (minikube_status.stdout | default('')))
 
     - name: Create Registry Secret
       shell: >
