@@ -28,8 +28,8 @@ jobs:
           python tests/integration_test.py
           python tests/smoke_test.py
           python tests/unit_test.py
-      - name: Build Docker image from Dockerfile
-        run: docker build -t weather-ml-app:ci-test
+      - name: Build Docker image
+        run: docker build -t weather-ml-app:ci-test .
       - name: Create container
         run: docker run --rm weather-ml-app:ci-test python --version
       - name: Login to Dockerhub
