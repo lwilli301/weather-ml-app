@@ -33,7 +33,7 @@ jobs:
       - name: Create container
         run: docker run --rm weather-ml-app:ci-test python --version
       - name: Login to Dockerhub
-        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password--stdin
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
       - name: Push Docker image
         run: |
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/weather-ml-app:v1
