@@ -10,10 +10,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up kubeconfig
+      - name: Install Minikube
+        run: |
+          curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+          sudo install minikube-linux-amd64 /usr/local/bin/minikube
+      
+      - name: Start Minikube
+        run: minikube start --driver=docker
+      
+      - name: Use Minikube kubeconfig
         run: |
           mkdir -p $HOME/.kube
           echo "${{ secrets.KUBECONFIG_CONTENT }}" > $HOME/.kube/config
+      
+      - name: Deploy
+        run: kubectl set image deployment/weather-ml-app weather-ml-app=${{ secrets.DOCKERHUB_USERNAME }}/weather-ml-app:latest
 
       - name: Deploy to Kubernetes (rolling update)
         run: |
