@@ -24,6 +24,7 @@ jobs:
       - name: Run integration tests
         run: |
           source venv/bin/activate
+          export PYTHONPATH="$PYTHONPATH:$GITHUB_WORKSPACE"
           python tests/integration_test.py
           python tests/smoke_test.py
           python tests/unit_test.py
