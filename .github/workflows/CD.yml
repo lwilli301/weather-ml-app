@@ -5,15 +5,17 @@ on:
     types:
       - completed
 jobs:
-  Step_G:
-    runs-on: self-hosted
+  deploy:
+    runs-on: ubuntu-latest
     steps:
-      - name: Install kubectl
+      - uses: actions/checkout@v4
+
+      - name: Set up kubeconfig
         run: |
-            sudo curl -L "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" -o /usr/local/bin/kubectl
-            sudo chmod +x /usr/local/bin/kubectl
-            kubectl version --client
-      - name: Deploy to Kubernetes
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG_CONTENT }}" > $HOME/.kube/config
+
+      - name: Deploy to Kubernetes (rolling update)
         run: |
-          kubectl apply -f k8s/deployment.yaml
-          kubectl apply -f k8s/service.yaml
+          kubectl set image deployment/weather-ml-app weather-ml-app=${{ secrets.DOCKERHUB_USERNAME }}/weather-ml-app:latest
+          kubectl rollout status deployment/weather-ml-app
