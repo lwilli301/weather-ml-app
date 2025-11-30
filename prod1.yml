@@ -4,9 +4,6 @@
 
   vars:
     sys_user: "ubuntu"
-    docker_registry_user: ${{ secrets.DOCKERHUB_USERNAME }}
-    docker_registry_pass: ${{ secrets.DOCKERHUB_PASSWORD }}
-    docker_registry_email: ${{ secrets.DOCKERHUB_EMAIL }}
 
   tasks:
 
@@ -57,15 +54,6 @@
         HOME: "/home/ubuntu"
         USER: "ubuntu"
 
-    - name: Create Registry Secret
-      shell: >
-        minikube kubectl -- create secret docker-registry regcred
-        --docker-username={{ docker_registry_user }}
-        --docker-password={{ docker_registry_pass }}
-        --docker-email={{ docker_registry_email }}
-        --dry-run=client -o yaml | minikube kubectl -- apply -f -
-      become: no
-
     - name: Create Deployment Manifest
       copy:
         dest: "/home/{{ sys_user }}/deployment.yml"
@@ -89,8 +77,6 @@
                     image: lwilli301/weather-ml-app:v3
                     ports:
                       - containerPort: 5000
-                imagePullSecrets:
-                  - name: regcred
 
     - name: Apply Deployment
       shell: minikube kubectl -- apply -f /home/{{ sys_user }}/deployment.yml
