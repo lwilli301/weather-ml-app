@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weather-ml-app
+  labels:
+    app: weather-ml-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: weather-ml-app
+  template:
+    metadata:
+      labels:
+        app: weather-ml-app
+    spec:
+      containers:
+        - name: weather-ml-app
+          image: Dockerimage
+          ports:
+            - containerPort: 5000
+          env:
+            - name: FLASK_ENV
+              value: production
+            - name: PORT
+              value: "5000"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: weather-ml-service
+spec:
+  selector:
+    app: weather-ml-app
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 5000
