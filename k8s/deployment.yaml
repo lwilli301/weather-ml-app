@@ -22,8 +22,9 @@ spec:
     spec:
       containers:
         - name: weather
-          image: olehpatsan/weather-ml-app:latest
+          image: iwilli301/weather-ml-app:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
+
 
