@@ -23,7 +23,7 @@ def classify_weather(features):
 def home():
 	if request.method == 'POST':
 		try:
-			#  Extract floats from form data
+			# Extract floats from form data
 			temperature = request.form['temperature']
 			pressure = request.form['pressure']
 			humidity = request.form['humidity']
