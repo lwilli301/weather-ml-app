@@ -1,4 +1,5 @@
 name: CI pipeline
+
 on:
   push:
     branches:
@@ -6,35 +7,63 @@ on:
   pull_request:
     branches:
       - main
+
 jobs:
-  B2F:
+  build-test-push:
     runs-on: self-hosted
+
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+
+      - name: Determine next version
+        id: version
+        env:
+          USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          REPO: weather-ml-app
+          TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          last=$(curl -s -u "$USER:$TOKEN" \
+            "https://hub.docker.com/v2/repositories/$USER/$REPO/tags/?page_size=100" \
+            | jq -r '.results[].name' \
+            | grep -E '^v[0-9]+$' \
+            | sed 's/v//' \
+            | sort -n | tail -1)
+          next=$((last + 1))
+          echo "VERSION=v$next" >> $GITHUB_ENV
+          echo "VERSION=v$next" >> $GITHUB_OUTPUT
+
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.12'
+          python-version: '3.10'
+
       - name: Install dependencies
         run: |
-          python -m venv venv
-          source venv/bin/activate
-          pip install --upgrade pip
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
-      - name: Run integration tests
+
+      - run: PYTHONPATH=$PWD:$PYTHONPATH python ./tests/smoke_test.py
+      - run: PYTHONPATH=$PWD:$PYTHONPATH python ./tests/unit_test.py
+      - run: PYTHONPATH=$PWD:$PYTHONPATH python ./tests/integration_test.py
+
+      - name: Login to DockerHub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" |
+             docker login --username "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Build
+        run: docker build -t "${{ secrets.DOCKERHUB_USERNAME }}/weather-ml-app:${{ env.VERSION }}" .
+
+      - name: Run container smoke test
         run: |
-          source venv/bin/activate
-          export PYTHONPATH="$PYTHONPATH:$GITHUB_WORKSPACE"
-          python tests/integration_test.py
-          python tests/smoke_test.py
-          python tests/unit_test.py
-      - name: Build Docker image
-        run: docker build -t weather-ml-app:ci-test .
-      - name: Create container
-        run: docker run --rm weather-ml-app:ci-test python --version
-      - name: Login to Dockerhub
-        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-      - name: Push Docker image
-        run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/weather-ml-app:latest .
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/weather-ml-app:latest
+          docker run --rm "${{ secrets.DOCKERHUB_USERNAME }}/weather-ml-app:${{ env.VERSION }}" \
+            echo "Container started successfully"
+
+      - name: Push
+        run: docker push "${{ secrets.DOCKERHUB_USERNAME }}/weather-ml-app:${{ env.VERSION }}"
+
+      - name: Save version artifact
+        run: echo "${{ env.VERSION }}" > version.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: version
+          path: version.txt
