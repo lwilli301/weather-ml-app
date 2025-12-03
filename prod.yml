@@ -58,11 +58,11 @@
       when: "'Running' not in minikube_status.stdout"
 
     - name: Apply Kubernetes Deployment
-      shell: minikube kubectl -- apply -f /home/ubuntu/weather-ml-app_forked/k8s/deployment.yaml
+      shell: minikube kubectl -- apply -f /home/ubuntu/weather-ml-app/k8s/deployment.yaml
       become: no
 
     - name: Apply Kubernetes Service
-      shell: minikube kubectl -- apply -f /home/ubuntu/weather-ml-app_forked/k8s/service.yaml
+      shell: minikube kubectl -- apply -f /home/ubuntu/weather-ml-app/k8s/service.yaml
       become: no
 
 
