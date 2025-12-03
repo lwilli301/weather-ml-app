@@ -1,49 +1,28 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: weather-ml-app
+  name: weather-deployment
   labels:
-    app: weather-ml-app
+    app: weather
 spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: weather-ml-app
+  replicas: 3
+  revisionHistoryLimit: 2
   strategy:
     type: RollingUpdate
     rollingUpdate:
       maxSurge: 1
       maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: weather
   template:
     metadata:
       labels:
-        app: weather-ml-app
+        app: weather
     spec:
       containers:
-        - name: weather-ml-app
-          image: yourdockerhubusername/weather-ml-app:latest
+        - name: weather
+          image: olehpatsan/weather-ml-app:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5000
-          env:
-            - name: FLASK_ENV
-              value: production
-            - name: PORT
-              value: "5000"
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 5000
-            initialDelaySeconds: 5
-            periodSeconds: 5
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: weather-ml-service
-spec:
-  selector:
-    app: weather-ml-app
-  type: LoadBalancer
-  ports:
-    - port: 80
-      targetPort: 5000
