@@ -1,21 +1,39 @@
 name: CD pipeline
+
 on:
   workflow_run:
-    workflows: [CI Pipeline]
-    types:
-      - completed
-jobs:
-  deploy-to-minikube:
-    runs-on: self-hosted
-    steps:
-      # Configure kubectl
-      - name: Setup kubeconfig
-        run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBECONFIG_CONTENT }}" > $HOME/.kube/config
+    workflows: ["CI pipeline"]
+    types: [completed]
+    branches:
+      - main
 
-      # Deploy to Kubernetes
-      - name: Deploy to K8s
+jobs:
+  deploy:
+    runs-on: self-hosted
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: version
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Read version
         run: |
-          kubectl set image deployment/weather-ml-app weather-ml-app=${{ secrets.DOCKERHUB_USERNAME }}/weather-ml-app:latest
-          kubectl rollout status deployment/weather-ml-app
+          VERSION=$(cat version.txt)
+          echo "IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/weather-ml-app:$VERSION" >> $GITHUB_ENV
+
+      - run: |
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+
+      - run: |
+          kubectl set image deployment/weather-deployment weather="$IMAGE"
+          kubectl rollout status deployment/weather-deployment --timeout=120s
+
+      - run: |
+          kubectl get pods -o wide
+          kubectl get deploy -o wide
